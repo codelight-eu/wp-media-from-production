@@ -2,7 +2,8 @@
 
 namespace Codelight\MediaFromProduction;
 
-class MediaFromProduction {
+class MediaFromProduction
+{
 
     /**
      * Production URL
@@ -10,7 +11,7 @@ class MediaFromProduction {
      * @since 1.0.0
      * @var string
      */
-    public $production_url = '';
+    public $productionUrl = '';
 
     /**
      * Holds list of upload directories
@@ -19,7 +20,7 @@ class MediaFromProduction {
      * @since 1.0.0
      * @var array
      */
-    public $directories = array();
+    public $directories = [];
 
     /**
      * Start Month
@@ -42,17 +43,30 @@ class MediaFromProduction {
      *
      * @since 1.0.0
      */
-    function __construct() {
+    function __construct()
+    {
 
         // Set upload directories
-        add_action( 'init',                               array( $this, 'set_upload_directories' )     );
+        add_action('init', [$this, 'set_upload_directories']);
 
         // Update Image URLs
-        add_filter( 'wp_get_attachment_image_src',        array( $this, 'image_src'              )     );
-        add_filter( 'wp_get_attachment_image_attributes', array( $this, 'image_attr'             ), 99 );
-        add_filter( 'wp_prepare_attachment_for_js',       array( $this, 'image_js'               ), 10, 3 );
-        add_filter( 'the_content',                        array( $this, 'image_content'          )     );
+        add_filter('wp_calculate_image_srcset', [$this, 'changeSrcSetUrls'], 10, 5);
+        add_filter('wp_get_attachment_image_src', [$this, 'image_src']);
+        add_filter('wp_get_attachment_image_attributes', [$this, 'image_attr'], 99);
+        add_filter('wp_prepare_attachment_for_js', [$this, 'image_js'], 10, 3);
+        add_filter('the_content', [$this, 'image_content']);
 
+    }
+
+    public function changeSrcSetUrls($sources, $sizeArray, $imageSrc, $imageMeta, $attachmentId)
+    {
+        if (is_array($sources)) {
+            foreach ($sources as &$source) {
+                $source['url'] = $this->update_image_url($source['url']);
+            }
+        }
+
+        return $sources;
     }
 
     /**
@@ -60,11 +74,11 @@ class MediaFromProduction {
      *
      * @since 1.0.0
      */
-    function set_upload_directories() {
-
-        if( empty( $this->directories ) )
+    function set_upload_directories()
+    {
+        if (empty($this->directories)) {
             $this->directories = $this->get_upload_directories();
-
+        }
     }
 
     /**
@@ -72,27 +86,28 @@ class MediaFromProduction {
      *
      * @since 1.0.0
      */
-    function get_upload_directories() {
+    function get_upload_directories()
+    {
 
         // Include all upload directories starting from a specific month and year
-        $month = str_pad( apply_filters( 'be_media_from_production_start_month', $this->start_month ), 2, 0, STR_PAD_LEFT );
-        $year = apply_filters( 'be_media_from_production_start_year', $this->start_year );
+        $month = str_pad(apply_filters('be_media_from_production_start_month', $this->start_month), 2, 0, STR_PAD_LEFT);
+        $year  = apply_filters('be_media_from_production_start_year', $this->start_year);
 
-        $upload_dirs = array();
+        $upload_dirs = [];
 
-        if( $month && $year ) {
-            for( $i = 0; $year . $month <= date( 'Ym' ); $i++ ) {
+        if ($month && $year) {
+            for ($i = 0; $year . $month <= date('Ym'); $i++) {
                 $upload_dirs[] = $year . '/' . $month;
                 $month++;
-                if( 13 == $month ) {
+                if (13 == $month) {
                     $month = 1;
                     $year++;
                 }
-                $month = str_pad( $month, 2, 0, STR_PAD_LEFT );
+                $month = str_pad($month, 2, 0, STR_PAD_LEFT);
             }
         }
 
-        return apply_filters( 'be_media_from_production_directories', $upload_dirs );
+        return apply_filters('be_media_from_production_directories', $upload_dirs);
 
     }
 
@@ -103,10 +118,12 @@ class MediaFromProduction {
      * @param array $image
      * @return array $image
      */
-    function image_src( $image ) {
+    function image_src($image)
+    {
 
-        if( isset( $image[0] ) )
-            $image[0] = $this->update_image_url( $image[0] );
+        if (isset($image[0]))
+            $image[0] = $this->update_image_url($image[0]);
+
         return $image;
 
     }
@@ -118,10 +135,12 @@ class MediaFromProduction {
      * @param array $attr
      * @return array $attr
      */
-    function image_attr( $attr ) {
+    function image_attr($attr)
+    {
 
-        if( isset( $attr['srcset'] ) )
-            $attr['srcset'] = $this->update_image_url( $attr['srcset'] );
+        if (isset($attr['srcset']))
+            $attr['srcset'] = $this->update_image_url($attr['srcset']);
+
         return $attr;
 
     }
@@ -131,18 +150,19 @@ class MediaFromProduction {
      * Primarily used for media library
      *
      * @since 1.3.0
-     * @param array      $response   Array of prepared attachment data
+     * @param array      $response Array of prepared attachment data
      * @param int|object $attachment Attachment ID or object
-     * @param array      $meta       Array of attachment metadata
+     * @param array      $meta Array of attachment metadata
      * @return array     $response   Modified attachment data
      */
-    function image_js( $response, $attachment, $meta ) {
+    function image_js($response, $attachment, $meta)
+    {
 
-        if( isset( $response['url'] ) )
-            $response['url'] = $this->update_image_url( $response['url'] );
+        if (isset($response['url']))
+            $response['url'] = $this->update_image_url($response['url']);
 
-        foreach( $response['sizes'] as &$size ) {
-            $size['url'] = $this->update_image_url( $size['url'] );
+        foreach ($response['sizes'] as &$size) {
+            $size['url'] = $this->update_image_url($size['url']);
         }
 
         return $response;
@@ -155,18 +175,20 @@ class MediaFromProduction {
      * @param string $content
      * @return string $content
      */
-    function image_content( $content ) {
+    function image_content($content)
+    {
         $upload_locations = wp_upload_dir();
 
         $regex = '/https?\:\/\/[^\" ]+/i';
         preg_match_all($regex, $content, $matches);
 
-        foreach( $matches[0] as $url ) {
-            if( false !== strpos( $url, $upload_locations[ 'baseurl' ] ) ) {
-                $new_url = $this->update_image_url( $url );
-                $content = str_replace( $url, $new_url, $content );
+        foreach ($matches[0] as $url) {
+            if (false !== strpos($url, $upload_locations['baseurl'])) {
+                $new_url = $this->update_image_url($url);
+                $content = str_replace($url, $new_url, $content);
             }
         }
+
         return $content;
     }
 
@@ -177,9 +199,11 @@ class MediaFromProduction {
      * @param string $url
      * @return string $local_filename
      */
-    function local_filename( $url ) {
+    function local_filename($url)
+    {
         $upload_locations = wp_upload_dir();
-        $local_filename = str_replace( $upload_locations[ 'baseurl' ], $upload_locations[ 'basedir' ], $url );
+        $local_filename   = str_replace($upload_locations['baseurl'], $upload_locations['basedir'], $url);
+
         return $local_filename;
     }
 
@@ -190,52 +214,59 @@ class MediaFromProduction {
      * @param string $url
      * @return boolean
      */
-    function local_image_exists( $url ) {
-        return file_exists( $this->local_filename( $url ) );
+    function local_image_exists($url)
+    {
+        return file_exists($this->local_filename($url));
     }
 
     /**
      * Update Image URL
      *
      * @since 1.0.0
-     * @param string $image_url
-     * @return string $image_url
+     * @param string $imageUrl
+     * @return string $imageUrl
      */
-    function update_image_url( $image_url ) {
-
-        if( ! $image_url )
-            return $image_url;
-
-        if ( $this->local_image_exists( $image_url ) ) {
-            return $image_url;
+    function update_image_url($imageUrl)
+    {
+        if (!$imageUrl) {
+            return $imageUrl;
         }
 
-        $production_url = esc_url( apply_filters( 'be_media_from_production_url', $this->production_url ) );
-        if( empty( $production_url ) )
-            return $image_url;
+        if ($this->local_image_exists($imageUrl)) {
+            return $imageUrl;
+        }
 
-        $exists = false;
+        $productionUrl = esc_url(apply_filters('be_media_from_production_url', $this->productionUrl));
+        if (empty($productionUrl)) {
+            return $imageUrl;
+        }
+
+        $exists      = false;
         $upload_dirs = $this->directories;
-        if( $upload_dirs ) {
-            foreach( $upload_dirs as $option ) {
-                if( strpos( $image_url, $option ) ) {
+        if ($upload_dirs) {
+            foreach ($upload_dirs as $option) {
+                if (strpos($imageUrl, $option)) {
                     $exists = true;
                 }
             }
         }
 
-        if( ! $exists ) {
+        if ($exists) {
+            return $imageUrl;
+        }
 
-            if (false === stristr(home_url(), $image_url)) {
-                $image_url = $production_url . $image_url;
-            } else {
-                $image_url = str_replace( home_url(), $production_url, $image_url );
+        if (false === stristr($imageUrl, home_url())) {
+            // Ensure duplicate URL is not added.
+            // Todo: test, this might break something in a different scenario?
+            if (false === stristr($imageUrl, $productionUrl)) {
+                $imageUrl = $productionUrl . $imageUrl;
             }
+        } else {
+            $imageUrl = str_replace(home_url(), $productionUrl, $imageUrl);
         }
 
 
-
-        return $image_url;
+        return $imageUrl;
     }
 
 }
