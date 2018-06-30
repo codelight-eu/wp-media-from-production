@@ -13,4 +13,6 @@
 // Exit if accessed directly
 if (!defined('ABSPATH')) exit;
 
+require_once('src/MediaFromProduction.php');
+
 new Codelight\MediaFromProduction\MediaFromProduction();
