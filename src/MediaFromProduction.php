@@ -267,8 +267,9 @@ class MediaFromProduction
             $imageUrl = str_replace(home_url(), $productionUrl, $imageUrl);
         }
 
-        if ($remoteFolder && defined('CONTENT_DIR')) {
-            $imageUrl = str_replace(CONTENT_DIR, $remoteFolder, $imageUrl);
+        if ($remoteFolder) {
+            $localContentDir = defined('CONTENT_DIR') ? CONTENT_DIR : 'wp-content';
+            $imageUrl = str_replace($localContentDir, $remoteFolder, $imageUrl);
         }
 
         return $imageUrl;
