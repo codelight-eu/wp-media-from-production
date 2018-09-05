@@ -257,14 +257,14 @@ class MediaFromProduction
 
         $remoteFolder = apply_filters('be_media_from_production_remote_content_dir', false);
 
-        if (false === stristr($imageUrl, home_url())) {
+        if (false === stristr($imageUrl, site_url())) {
             // Ensure duplicate URL is not added.
             // Todo: test, this might break something in a different scenario?
             if (false === stristr($imageUrl, $productionUrl)) {
                 $imageUrl = $productionUrl . $imageUrl;
             }
         } else {
-            $imageUrl = str_replace(home_url(), $productionUrl, $imageUrl);
+            $imageUrl = str_replace(site_url(), $productionUrl, $imageUrl);
         }
 
         if ($remoteFolder) {
