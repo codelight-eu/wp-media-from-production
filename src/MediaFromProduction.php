@@ -236,7 +236,8 @@ class MediaFromProduction
             return $imageUrl;
         }
 
-        $productionUrl = esc_url(apply_filters('be_media_from_production_url', $this->productionUrl));
+        $productionUrl = defined('MEDIA_PRODUCTION_REMOTE_URL') ? MEDIA_PRODUCTION_REMOTE_URL : '';
+        $productionUrl = esc_url(apply_filters('be_media_from_production_url', $productionUrl));
         if (empty($productionUrl)) {
             return $imageUrl;
         }
@@ -255,16 +256,17 @@ class MediaFromProduction
             return $imageUrl;
         }
 
-        $remoteFolder = apply_filters('be_media_from_production_remote_content_dir', false);
+        $remoteFolder = defined('MEDIA_PRODUCTION_REMOTE_FOLDER') ? MEDIA_PRODUCTION_REMOTE_FOLDER : '';
+        $remoteFolder = apply_filters('be_media_from_production_remote_content_dir', $remoteFolder);
 
-        if (false === stristr($imageUrl, site_url())) {
+        if (false === stristr($imageUrl, home_url())) {
             // Ensure duplicate URL is not added.
             // Todo: test, this might break something in a different scenario?
             if (false === stristr($imageUrl, $productionUrl)) {
                 $imageUrl = $productionUrl . $imageUrl;
             }
         } else {
-            $imageUrl = str_replace(site_url(), $productionUrl, $imageUrl);
+            $imageUrl = str_replace(home_url(), $productionUrl, $imageUrl);
         }
 
         if ($remoteFolder) {
