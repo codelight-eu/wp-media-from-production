@@ -111,7 +111,7 @@ class MediaFromProduction
         return apply_filters('be_media_from_production_directories', $upload_dirs);
 
     }
-    
+
     /**
      * ACF image field return format 'url', among other things
      */
@@ -211,7 +211,23 @@ class MediaFromProduction
     function local_filename($url)
     {
         $upload_locations = wp_upload_dir();
-        $local_filename   = str_replace($upload_locations['baseurl'], $upload_locations['basedir'], $url);
+
+        if (stristr($url, 'http')) {
+            // Image is defined with absolute URL, therefore we can do a simple str_replace to swap out the base URL with base directory
+            $local_filename   = str_replace($upload_locations['baseurl'], $upload_locations['basedir'], $url);
+        } else {
+            // Image is defined with relative URL, therefore we must do some magic
+            // First get the name of the uploads dir as well as local content dir
+            $uploadsDirectoryName = wp_basename( $upload_locations['baseurl'] );
+            $localContentDir = defined('WP_CONTENT_DIR') ? wp_basename(WP_CONTENT_DIR) : 'wp-content';
+
+            // Then remove them from the basedir to get the root directory path that matches the http root
+            $contentDir = str_replace($uploadsDirectoryName, '', $upload_locations['basedir']);
+            $rootBaseDir = rtrim(str_replace($localContentDir, '', $contentDir), '/');
+
+            // Then join the relative image URL with the path that matches the http root
+            $local_filename = $rootBaseDir . $url;
+        }
 
         return $local_filename;
     }
@@ -279,7 +295,7 @@ class MediaFromProduction
         }
 
         if ($remoteFolder) {
-            $localContentDir = defined('CONTENT_DIR') ? CONTENT_DIR : 'wp-content';
+            $localContentDir = defined('WP_CONTENT_DIR') ? wp_basename(WP_CONTENT_DIR) : 'wp-content';
             $imageUrl = str_replace($localContentDir, $remoteFolder, $imageUrl);
         }
 
