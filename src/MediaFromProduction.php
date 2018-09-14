@@ -55,6 +55,7 @@ class MediaFromProduction
         add_filter('wp_get_attachment_image_attributes', [$this, 'image_attr'], 99);
         add_filter('wp_prepare_attachment_for_js', [$this, 'image_js'], 10, 3);
         add_filter('the_content', [$this, 'image_content']);
+        add_filter('wp_get_attachment_url', [$this, 'attachment_url'], 99);
 
     }
 
@@ -109,6 +110,14 @@ class MediaFromProduction
 
         return apply_filters('be_media_from_production_directories', $upload_dirs);
 
+    }
+    
+    /**
+     * ACF image field return format 'url', among other things
+     */
+    function attachment_url($url)
+    {
+        return $this->update_image_url($url);
     }
 
     /**
