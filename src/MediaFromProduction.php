@@ -166,12 +166,14 @@ class MediaFromProduction
      */
     function image_js($response, $attachment, $meta)
     {
-
-        if (isset($response['url']))
+        if (isset($response['url'])) {
             $response['url'] = $this->update_image_url($response['url']);
+        }
 
-        foreach ($response['sizes'] as &$size) {
-            $size['url'] = $this->update_image_url($size['url']);
+        if (is_array($response['sizes']) && count($response['sizes'])) {
+            foreach ($response['sizes'] as &$size) {
+                $size['url'] = $this->update_image_url($size['url']);
+            }
         }
 
         return $response;
