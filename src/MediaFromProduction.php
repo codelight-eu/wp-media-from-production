@@ -283,7 +283,7 @@ class MediaFromProduction
             return $imageUrl;
         }
 
-        $remoteFolder = defined('MEDIA_PRODUCTION_REMOTE_FOLDER') ? MEDIA_PRODUCTION_REMOTE_FOLDER : '';
+        $remoteFolder = defined('MEDIA_PRODUCTION_REMOTE_FOLDER') ? MEDIA_PRODUCTION_REMOTE_FOLDER : 'wp-content';
         $remoteFolder = apply_filters('be_media_from_production_remote_content_dir', $remoteFolder);
 
         if (false === stristr($imageUrl, home_url())) {
