@@ -15,7 +15,13 @@ The plugin is actively used by [Codelight](https://codelight.eu/) in our day-to-
 
 
 ## Configuration
-Via wp-config (recommended):
+First, ensure your `WP_ENV` constant is set to `development` in wp-config:
+```php
+<?php
+define('WP_ENV', 'development');
+```
+
+Configuring the plugin via wp-config (recommended):
 ```php
 <?php
 define('MEDIA_PRODUCTION_REMOTE_URL', 'https://production-url.com');
