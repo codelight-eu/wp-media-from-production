@@ -287,9 +287,14 @@ class MediaFromProduction
         $remoteFolder = apply_filters('be_media_from_production_remote_content_dir', $remoteFolder);
 
         if (false === stristr($imageUrl, home_url())) {
-            // Ensure duplicate URL is not added.
-            // Todo: test, this might break something in a different scenario?
-            if (false === stristr($imageUrl, $productionUrl)) {
+            /**
+             * Ensure that 
+             * 1) if the URL already points to production, we don't duplicate it
+             * 2) if the URL points to *another* website, e.g. an image resizer site, then we just pass it through
+             * 
+             * todo: test, this might break in some scenarios
+             */
+            if (false === stristr($imageUrl, $productionUrl) && false !== stristr('https', $imageUrl)) {
                 $imageUrl = $productionUrl . $imageUrl;
             }
         } else {
