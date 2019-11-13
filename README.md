@@ -4,15 +4,14 @@ You'll want to use this in your local or development environment to save disk sp
 
 This plugin is a fork of Bill Erickson's [BE Media from Production](https://github.com/billerickson/BE-Media-from-Production), updated to support different remote folders, svg files, constants instead of filters for configuration and a couple of other details.
 
-## How it works
-For every media file that's displayed on the site, the plugin checks if there is an existing local file with the same name in wherever your uploads are located.
-If there is, it displays the local file. If there is not, then it rewrites the image URL to point at your remote environment.
-
 ## Version support
-Tested & works with WP 5.1  
+Tested & works on WP 5.3 and earlier.
 
 The plugin is actively used by [Codelight](https://codelight.eu/) in our day-to-day operations, so we expect to maintain it for a while.
 
+## How it works
+For every media file that's displayed on the site, the plugin checks if there is an existing local file with the same name in wherever your uploads are located.
+If there is, it displays the local file. If there is not, then it rewrites the image URL to point at your remote environment.
 
 ## Configuration
 First, ensure your `WP_ENV` constant is set to `development` in wp-config:
