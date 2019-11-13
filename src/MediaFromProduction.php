@@ -269,6 +269,13 @@ class MediaFromProduction
             return $imageUrl;
         }
 
+        // Find out if the production protocol is https or http
+        if (stristr(MEDIA_PRODUCTION_REMOTE_URL, 'https')) {
+            $protocol = 'https';
+        } else {
+            $protocol = 'http';
+        }
+
         $exists      = false;
         $upload_dirs = $this->directories;
         if ($upload_dirs) {
@@ -291,10 +298,11 @@ class MediaFromProduction
              * Ensure that 
              * 1) if the URL already points to production, we don't duplicate it
              * 2) if the URL points to *another* website, e.g. an image resizer site, then we just pass it through
-             * 
-             * todo: test, this might break in some scenarios
              */
-            if (false === stristr($imageUrl, $productionUrl) && false !== stristr('https', $imageUrl)) {
+            if (false === stristr($imageUrl, $productionUrl) && false !== stristr($imageUrl, 'https')) {
+                $imageUrl = $productionUrl . $imageUrl;
+            } elseif (false === stristr($imageUrl, $protocol)) {
+                // If the URL doesn't contain http(s) protocol at all, just assume it's a relative URL and prepend the production URL
                 $imageUrl = $productionUrl . $imageUrl;
             }
         } else {
