@@ -323,7 +323,7 @@ class MediaFromProduction
             } elseif (false === stristr($imageUrl, $protocol)) {
                 // If the URL doesn't contain http(s) protocol at all, just assume it's a relative URL and prepend the production URL
                 $imageUrl = $productionUrl . $imageUrl;
-            } else if (!$this->matchesExternalDomain($imageUrl)) {
+            } else if (!$this->matchesIgnoredDomain($imageUrl)) {
                 $imageUrl = str_replace($home_url, $productionUrl, $imageUrl);
             }
         } else {
@@ -341,9 +341,9 @@ class MediaFromProduction
     /**
      * Todo: this requires safer checks
      */
-    public function matchesExternalDomain($url)
+    public function matchesIgnoredDomain($url)
     {
-        foreach ($this->externalDomains as $domain) {
+        foreach ($this->ignoredDomains as $domain) {
             if (stristr($url, $domain)) {
                 return true;
             }
