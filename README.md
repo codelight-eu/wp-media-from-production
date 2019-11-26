@@ -28,6 +28,11 @@ define('MEDIA_PRODUCTION_REMOTE_URL', 'https://production-url.com');
 // Optional, in case you're running Trellis or something that rewrites wp-content folder name
 define('MEDIA_PRODUCTION_REMOTE_FOLDER', 'app');
 
+// Optional, in case some of your images come from 3rd party domains, such as an image resizer
+define('MEDIA_PRODUCTION_IGNORE_DOMAINS', [
+    'resizer.com',
+    'someotherdomain.com',
+]);
 ```
 
 Via filters (note that the filter names will change in an upcoming release):
