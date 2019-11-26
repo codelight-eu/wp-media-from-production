@@ -38,6 +38,10 @@ class MediaFromProduction
      */
     public $start_year = false;
 
+    public $ignoredDomains = [
+        'wp.com',
+    ];
+
     /**
      * Primary constructor.
      *
@@ -45,7 +49,6 @@ class MediaFromProduction
      */
     function __construct()
     {
-
         // Set upload directories
         add_action('init', [$this, 'set_upload_directories']);
 
@@ -57,6 +60,9 @@ class MediaFromProduction
         add_filter('the_content', [$this, 'image_content']);
         add_filter('wp_get_attachment_url', [$this, 'attachment_url'], 99);
 
+        if (defined('MEDIA_PRODUCTION_IGNORE_DOMAINS') && !empty(MEDIA_PRODUCTION_IGNORE_DOMAINS)) {
+            $this->ignoreDomains = array_merge($this->ignoredDomains, MEDIA_PRODUCTION_IGNORE_DOMAINS);
+        }
     }
 
     public function changeSrcSetUrls($sources, $sizeArray, $imageSrc, $imageMeta, $attachmentId)
@@ -265,16 +271,12 @@ class MediaFromProduction
 
         $productionUrl = defined('MEDIA_PRODUCTION_REMOTE_URL') ? MEDIA_PRODUCTION_REMOTE_URL : '';
         $productionUrl = esc_url(apply_filters('be_media_from_production_url', $productionUrl));
+
         if (empty($productionUrl)) {
             return $imageUrl;
         }
 
-        // Find out if the production protocol is https or http
-        if (stristr(MEDIA_PRODUCTION_REMOTE_URL, 'https')) {
-            $protocol = 'https';
-        } else {
-            $protocol = 'http';
-        }
+        $productionUrl = trailingslashit($productionUrl);
 
         $exists      = false;
         $upload_dirs = $this->directories;
@@ -290,10 +292,27 @@ class MediaFromProduction
             return $imageUrl;
         }
 
+        /**
+         * WPML compatibility - strip the language slug from URL
+         */
+        if ( function_exists('icl_object_id') ) {
+            $language_code = apply_filters('wpml_current_language', '');
+            $home_url = str_replace($language_code . '/', '', home_url());
+        } else {
+            $home_url = home_url();
+        }
+
+        // Find out if the production protocol is https or http
+        if (stristr($home_url, 'https')) {
+            $protocol = 'https';
+        } else {
+            $protocol = 'http';
+        }
+
         $remoteFolder = defined('MEDIA_PRODUCTION_REMOTE_FOLDER') ? MEDIA_PRODUCTION_REMOTE_FOLDER : 'wp-content';
         $remoteFolder = apply_filters('be_media_from_production_remote_content_dir', $remoteFolder);
 
-        if (false === stristr($imageUrl, home_url())) {
+        if (false === stristr($imageUrl, $home_url)) {
             /**
              * Ensure that 
              * 1) if the URL already points to production, we don't duplicate it
@@ -304,9 +323,11 @@ class MediaFromProduction
             } elseif (false === stristr($imageUrl, $protocol)) {
                 // If the URL doesn't contain http(s) protocol at all, just assume it's a relative URL and prepend the production URL
                 $imageUrl = $productionUrl . $imageUrl;
+            } else if (!$this->matchesExternalDomain($imageUrl)) {
+                $imageUrl = str_replace($home_url, $productionUrl, $imageUrl);
             }
         } else {
-            $imageUrl = str_replace(home_url(), $productionUrl, $imageUrl);
+            $imageUrl = str_replace($home_url, $productionUrl, $imageUrl);
         }
 
         if ($remoteFolder) {
@@ -317,4 +338,17 @@ class MediaFromProduction
         return $imageUrl;
     }
 
+    /**
+     * Todo: this requires safer checks
+     */
+    public function matchesExternalDomain($url)
+    {
+        foreach ($this->externalDomains as $domain) {
+            if (stristr($url, $domain)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
