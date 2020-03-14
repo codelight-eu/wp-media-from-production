@@ -54,7 +54,7 @@ class MediaFromProduction
 
         // Update Image URLs
         add_filter('wp_calculate_image_srcset', [$this, 'changeSrcSetUrls'], 10, 5);
-        add_filter('wp_get_attachment_image_src', [$this, 'image_src']);
+        add_filter('wp_get_attachment_image_src', [$this, 'image_src'], 10, 2);
         add_filter('wp_get_attachment_image_attributes', [$this, 'image_attr'], 99);
         add_filter('wp_prepare_attachment_for_js', [$this, 'image_js'], 10, 3);
         add_filter('the_content', [$this, 'image_content']);
@@ -133,11 +133,11 @@ class MediaFromProduction
      * @param array $image
      * @return array $image
      */
-    function image_src($image)
+    function image_src($image, $id)
     {
-
-        if (isset($image[0]))
+        if (isset($image[0])) {
             $image[0] = $this->update_image_url($image[0]);
+        }
 
         return $image;
 
@@ -221,6 +221,16 @@ class MediaFromProduction
         $upload_locations = wp_upload_dir();
 
         if (stristr($url, 'http')) {
+
+            // Check for protocol match. If no match, it means WP site url
+            // is defined with http, but visited over https (or vice versa).
+            // If so, fix it.
+            if (stristr($url, 'https') && stristr($upload_locations['baseurl'], 'https') === false) {
+                $upload_locations['baseurl'] = str_replace('http', 'https', $upload_locations['baseurl']);
+            } elseif (stristr($url, 'https') === false && stristr($upload_locations['baseurl'], 'https')) {
+                $upload_locations['baseurl'] = str_replace('https', 'http', $upload_locations['baseurl']);
+            }
+
             // Image is defined with absolute URL, therefore we can do a simple str_replace to swap out the base URL with base directory
             $local_filename   = str_replace($upload_locations['baseurl'], $upload_locations['basedir'], $url);
         } else {
